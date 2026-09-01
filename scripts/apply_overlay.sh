@@ -48,7 +48,8 @@ fi
 cp -rf "$OVERLAY_DIR/common/." "$KERNEL_DIR/"
 cp -rf "$OVERLAY_DIR/projects/$PROJECT/." "$KERNEL_DIR/"
 # 清除 .gitkeep 占位文件（仅用于让空目录进 git，不属于定制内容）
-find "$KERNEL_DIR" -name .gitkeep -delete 2>/dev/null || true
+# 注意排除 overlay 自身目录（overlay 是内核树的子模块，不能误删其占位文件）
+find "$KERNEL_DIR" -path "$OVERLAY_DIR" -prune -o -name .gitkeep -delete 2>/dev/null || true
 
 # 4. 完整性校验：树中路径集合 == MANIFEST 路径集合
 if [ "$VERIFY" -eq 1 ]; then
