@@ -1,13 +1,13 @@
-# 板级 dts 起步 + overlay 构建/部署修正
+# 打通 FEC/SR8201F 网口，NFS 根文件系统可登录
 
 ## 变更
 
-1. 从官方 EVK 起步，拉起自己的板级设备树（gengtao0901 + eMMC/1024x600）
-2. 把定制文件登记进清单，并留下上游原版快照，方便以后升级对照
-3. 构建时只编真正要启动的 dtb，include 用的中间 dts 不再单独编译
-4. 部署脚本默认推送自己的定制 dtb，不再指向出厂 7 寸 dtb 名
-5. 记录 U-Boot 仍加载错 dtb、TFTP 失败却用旧 dtb 启动等问题与修法
+1. 板级 dts：补 PHY 复位脚（GPIO5_IO07/08），关掉占用复位脚的 spi4，TX_CLK pad 对齐 ALPHA
+2. fec 驱动：复位后再等 150ms，probe 时配置 ENET TX_CLK pad（对照 IMX6 / SR8201F）
+3. MANIFEST / .baseline 登记 fec_main.c
+4. 补充硬件原理图归纳、网卡落地顺序与问题复盘文档（04/05/06）
 
-## 遗留
+## 验证
 
-板子已能加载定制 dtb，但网卡/NFS 仍可能起不来，下一步要按 ALPHA 板补 PHY 复位等配置。
+- 定制 dtb TFTP 加载成功；内核挂上 Generic PHY，eth0 Link Up 100M Full
+- IP-Config / NFS 挂载成功，可 login；ping 主机 192.168.3.52 通
