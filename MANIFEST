@@ -1,0 +1,5 @@
+# overlay MANIFEST - 手工初始化（学习项目从零起步）
+# date: 2026-09-01
+# base(master-gengtao-0901): dd1483f7c7dc95dd72132e4876cd3633b0f442eb
+M	scripts/dtc/dtc-lexer.l	common
+M	scripts/dtc/dtc-lexer.lex.c_shipped	common
