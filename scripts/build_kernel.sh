@@ -45,9 +45,13 @@ if [ -n "$TARGETS" ]; then
 else
     make zImage -j"$JOBS"
 
-    # 设备树目标列表从 MANIFEST 动态提取（你新增 dts 后自动生效）
+    # 设备树目标列表从 MANIFEST 动态提取（你新增 dts 后自动生效；
+    # 标注 no-dtb 的 include 型 dts 不单独编译）
     DTBS=$(grep -v '^#' "$OVERLAY_DIR/MANIFEST" \
-        | awk '$2 ~ /^arch\/arm\/boot\/dts\/.*\.dts$/ {sub(/^.*\//,"",$2); sub(/\.dts$/,"",$2); print $2}')
+        | awk '$2 ~ /^arch\/arm\/boot\/dts\/.*\.dts$/ {sub(/^.*\//,"",$2); sub(/\.dts$/,"",$2); print $2}' \
+        | while read -r d; do
+            grep -q "no-dtb" "arch/arm/boot/dts/$d.dts" 2>/dev/null || echo "$d"
+        done)
     if [ -n "$DTBS" ]; then
         for d in $DTBS; do
             make "$d.dtb" -j"$JOBS"

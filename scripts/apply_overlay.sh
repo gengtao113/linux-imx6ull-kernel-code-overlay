@@ -70,8 +70,10 @@ if [ "$VERIFY" -eq 1 ]; then
     fi
 
     # dts/Makefile 专项断言：MANIFEST 中的每个 dts 都要有对应 dtb 目标
+    # （标注 no-dtb 的 include 型 dts 除外，它们不单独编译）
     for d in $(grep -v '^#' "$OVERLAY_DIR/MANIFEST" \
         | awk '$2 ~ /^arch\/arm\/boot\/dts\/.*\.dts$/ {sub(/^.*\//,"",$2); sub(/\.dts$/,"",$2); print $2}'); do
+        grep -q "no-dtb" "arch/arm/boot/dts/$d.dts" 2>/dev/null && continue
         grep -q "$d.dtb" arch/arm/boot/dts/Makefile \
             || die "dts/Makefile 缺 $d.dtb 目标（新增 dts 记得在 project 的 dts/Makefile 里接线）"
     done

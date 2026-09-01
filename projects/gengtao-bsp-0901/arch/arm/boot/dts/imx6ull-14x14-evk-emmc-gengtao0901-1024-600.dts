@@ -1,0 +1,33 @@
+/*
+ * 板级定制 dts（学习项目）
+ * 从官方 imx6ull-14x14-evk-emmc.dts 复制改名，定制直接在本文件修改/追加。
+ *
+ * 第一个任务：网卡（fec + LAN8720A）
+ *   在"板级定制区"追加：
+ *     &fec1 { pinctrl-0 = <...>; phy-mode = "rmii";
+ *             phy-reset-gpios = <...>; phy-reset-duration = <...>; ... };
+ *   以及 iomuxc 的 pinctrl 组定义（MX6UL_PAD_...）。
+ *   卡住对照: git show IMX6:arch/arm/boot/dts/imx6ull-14x14-evk-emmc.dts
+ */
+
+/*
+ * Copyright (C) 2016 Freescale Semiconductor, Inc.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+
+#include "imx6ull-14x14-evk-gengtao0901.dts"
+
+&usdhc2 {
+	pinctrl-names = "default", "state_100mhz", "state_200mhz";
+	pinctrl-0 = <&pinctrl_usdhc2_8bit>;
+	pinctrl-1 = <&pinctrl_usdhc2_8bit_100mhz>;
+	pinctrl-2 = <&pinctrl_usdhc2_8bit_200mhz>;
+	bus-width = <8>;
+	non-removable;
+	status = "okay";
+};
+
+/* ===== 板级定制区（在此追加/覆盖节点） ===== */

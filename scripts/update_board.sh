@@ -19,7 +19,7 @@ MODE=${2:-tftp}
 #------------------------ 可修改配置项 --------------------------------
 TFTP_DIR=/home/gengtao/linux-imx6ull/tftpboot                  # TFTP 目录（uboot 从此拉取内核）
 ROOTFS_DIR=/home/gengtao/linux-imx6ull/nfs/rootfs              # NFS 根文件系统（更新模块用）
-DTB=imx6ull-14x14-emmc-7-1024x600-c                           # 板载屏幕对应设备树（学习目标名）
+DTB=imx6ull-14x14-evk-emmc-gengtao0901-1024-600               # 板载屏幕对应设备树（板级定制 dts）
 #----------------------------------------------------------------------
 
 OUT="$OUTPUT_DIR"

@@ -1,30 +1,13 @@
-首次提交：内核 overlay 定制框架搭建（学习项目）
+# 板级 dts 起步 + overlay 构建/部署修正
 
-一、框架结构
-- 内核树（../linux-imx6ull-kernel-code）保持 master-gengtao-0901 纯净基线，
-  所有定制放本 overlay，构建时拷贝覆盖
-- common/：公共定制层（当前为 scripts/dtc 的 extern yylloc 构建补丁，
-  适配宿主机 GCC 13 的 -fno-common）
-- projects/gengtao-bsp-0901/：板级定制层（从零开始，逐外设添加 dts/驱动/defconfig）
-- .baseline/：修改文件的基线侧快照（未来内核升级冲突检测）
-- MANIFEST：定制清单（基线 sha + 文件列表），驱动 apply 校验与 dtb 目标提取
-- gengtao-bsp-doc/：学习笔记与问题复盘文档（01-内核BSP框架搭建与启动问题复盘）
+## 变更
 
-二、脚本工具链（scripts/，详见 scripts/README.md）
-- common.sh            公共库：路径/工具链常量、layer_for 分层规则、safe_reset 安全重置
-- apply_overlay.sh     overlay → 内核树（先 common 后 project），校验 MANIFEST 完整性
-                       与 dts/Makefile 接线
-- build_kernel.sh      一键构建：重置基线 → apply → distclean/defconfig → zImage
-                       + dtb（从 MANIFEST 动态提取）+ modules → 打包到 ../output/<project>/
-- update_board.sh      部署产物到 TFTP/NFS，板子复位验证（tftp/nfs/all 模式）
-- capture_changes.sh   内核树手工修改回收到 overlay（编辑-编译-回收闭环）
-- extract_overlay.sh   从 git 分支差异提取定制重建 overlay（慎用：--branch IMX6
-                       会提取出厂全部定制）
-- restore_baseline.sh  内核树恢复干净基线
+1. 从官方 EVK 起步，拉起自己的板级设备树（gengtao0901 + eMMC/1024x600）
+2. 把定制文件登记进清单，并留下上游原版快照，方便以后升级对照
+3. 构建时只编真正要启动的 dtb，include 用的中间 dts 不再单独编译
+4. 部署脚本默认推送自己的定制 dtb，不再指向出厂 7 寸 dtb 名
+5. 记录 U-Boot 仍加载错 dtb、TFTP 失败却用旧 dtb 启动等问题与修法
 
-三、关键设计
-- BASE_BRANCH=master-gengtao-0901；safe_reset 在非基线分支上一律 checkout
-  而非 reset --hard，保护分支历史
-- 设备树目标列表由 MANIFEST 动态提取：新增 dts 即自动编对应 dtb
-- apply 时校验新增 dts 是否在 dts/Makefile 接线（防漏接，报错提示明确）
-- 产物树外输出到 ../output/gengtao-bsp-0901/，内核树随时可恢复纯净
+## 遗留
+
+板子已能加载定制 dtb，但网卡/NFS 仍可能起不来，下一步要按 ALPHA 板补 PHY 复位等配置。
