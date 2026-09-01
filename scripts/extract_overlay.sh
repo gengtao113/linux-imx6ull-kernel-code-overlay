@@ -35,6 +35,8 @@ trap 'rm -rf "$TMPD"' EXIT
 
 # 3. 生成状态清单并分流
 git diff --name-status "$BASE_BRANCH..$SRC_BRANCH" > "$TMPD/status" || die "git diff 失败"
+# 过滤子模块 gitlink 行（git archive 无法提取 gitlink 路径）
+sed -i "/\t${OVERLAY_REL}$/d" "$TMPD/status"
 [ -s "$TMPD/status" ] || die "$BASE_BRANCH..$SRC_BRANCH 无差异"
 # 防御：git archive 的参数展开依赖无空格/引号路径（只查路径列，状态与路径之间本就是制表符）
 awk '{print $2}' "$TMPD/status" | grep -qE '[[:space:]"]' && die "存在含空格/引号的路径，extract_overlay.sh 不支持"

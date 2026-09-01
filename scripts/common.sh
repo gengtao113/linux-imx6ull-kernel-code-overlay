@@ -2,10 +2,15 @@
 # overlay 工具链公共库
 # 常量可用环境变量覆盖；提供 die/warn/layer_for/safe_reset
 
-LINUX_ROOT=${LINUX_ROOT:-/home/gengtao/linux-imx6ull-code}
-KERNEL_DIR=${KERNEL_DIR:-$LINUX_ROOT/linux-imx6ull-kernel-code}
-OVERLAY_DIR=${OVERLAY_DIR:-$LINUX_ROOT/linux-kernel-overlay}
+# 路径自动定位：本 overlay 作为内核仓库的子模块，位于 <内核树>/linux-kernel-overlay/。
+# 布局：<KERNEL_DIR>/linux-kernel-overlay/scripts/common.sh，逐级向上推导。
+# 各常量均可用环境变量覆盖（特殊布局/多机部署时使用）。
+_SELF_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+OVERLAY_DIR=${OVERLAY_DIR:-$(dirname "$_SELF_DIR")}
+KERNEL_DIR=${KERNEL_DIR:-$(dirname "$OVERLAY_DIR")}
+LINUX_ROOT=${LINUX_ROOT:-$(dirname "$KERNEL_DIR")}
 OUTPUT_DIR=${OUTPUT_DIR:-$LINUX_ROOT/output}
+OVERLAY_REL=${OVERLAY_DIR#"$KERNEL_DIR"/}   # 内核树内的相对路径（子模块 gitlink 名）
 TOOLCHAIN=${TOOLCHAIN:-/usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf}
 # 注意：不用环境变量 CROSS_COMPILE 做默认值——用户 shell 环境可能已导出
 # buildroot 等其他工具链前缀（会与内核构建冲突）。编译脚本里显式 export 本变量。
@@ -16,6 +21,13 @@ BASE_BRANCH=master-gengtao-0901
 
 die()  { echo "ERROR: $*" >&2; exit 1; }
 warn() { echo "WARN: $*" >&2; }
+
+# 内核树状态查询：忽略 overlay 子模块自身的 gitlink 变化
+# （overlay 新提交会让内核树 git status 显示 " M linux-kernel-overlay"，
+#  但那是子模块内容变化，不是内核树定制内容）
+tree_porcelain() {
+    git -C "$KERNEL_DIR" status --porcelain "$@" | grep -v " ${OVERLAY_REL}$" || true
+}
 
 # 分层规则：内核树相对路径 -> overlay 层（调用前需设置 PROJECT）
 layer_for() {
@@ -37,7 +49,7 @@ safe_reset() {
     git rev-parse --git-dir >/dev/null 2>&1 || die "不是 git 仓库: $KERNEL_DIR"
 
     local dirty
-    dirty=$(git status --porcelain | wc -l)
+    dirty=$(tree_porcelain | wc -l)
     if [ "$dirty" -gt 0 ] && [ "$force" != "--force" ]; then
         die "内核树不干净（$dirty 项改动）。请先 capture_changes.sh 回收，或确认丢弃后加 --force"
     fi

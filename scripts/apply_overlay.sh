@@ -22,7 +22,7 @@ cd "$KERNEL_DIR"
 git rev-parse --git-dir >/dev/null 2>&1 || die "不是 git 仓库: $KERNEL_DIR"
 
 # 1. 内核树状态预检：cp -rf 会覆盖未回收的修改
-DIRTY=$(git status --porcelain | wc -l)
+DIRTY=$(tree_porcelain | wc -l)
 if [ "$DIRTY" -gt 0 ] && [ "$FORCE" -eq 0 ]; then
     die "内核树不干净（$DIRTY 项改动）。请先 capture_changes.sh 回收或 restore_baseline.sh（强制覆盖加 --force）"
 fi
@@ -49,7 +49,7 @@ if [ "$VERIFY" -eq 1 ]; then
     TMPD=$(mktemp -d)
     trap 'rm -rf "$TMPD"' EXIT
     grep -v '^#' "$OVERLAY_DIR/MANIFEST" | awk '{print $2}' | sort > "$TMPD/manifest_paths"
-    git status --porcelain -uall | sed 's/^...//' | sort > "$TMPD/tree_paths"
+    tree_porcelain -uall | sed 's/^...//' | sort > "$TMPD/tree_paths"
 
     MISSING=$(comm -23 "$TMPD/manifest_paths" "$TMPD/tree_paths")
     EXTRA=$(comm -13 "$TMPD/manifest_paths" "$TMPD/tree_paths")

@@ -8,6 +8,6 @@ source "$SCRIPT_DIR/common.sh"
 safe_reset "${1:-}"
 
 cd "$KERNEL_DIR"
-[ -z "$(git status --porcelain)" ] || die "恢复后内核树仍不干净"
+[ -z "$(tree_porcelain)" ] || die "恢复后内核树仍不干净"
 [ "$(git rev-parse HEAD)" = "$(git rev-parse "$BASE_BRANCH")" ] || die "HEAD 不在 $BASE_BRANCH"
 echo "OK: 内核树已恢复到干净 $BASE_BRANCH 基线 $(git rev-parse --short HEAD)"

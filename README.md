@@ -1,7 +1,18 @@
 # i.MX6ULL 内核 overlay 定制（学习项目）
 
-内核树 `../linux-imx6ull-kernel-code` 保持 **master-gengtao-0901 干净基线**
+内核树（本目录的上级目录 `..`）保持 **master-gengtao-0901 干净基线**
 （NXP 官方 4.1.15-2.1.0），零直接改动。所有定制放在本目录，编译时先拷贝覆盖再编译。
+
+## 获取代码
+
+本 overlay 是内核仓库的 git 子模块，随内核仓库一起克隆：
+
+```bash
+git clone --recursive git@github.com:gengtao113/linux-imx6ull-kernel-code.git -b master-gengtao-0901
+cd linux-imx6ull-kernel-code          # 内核树 + linux-kernel-overlay 子模块
+```
+
+已克隆内核仓库但缺子模块时：`git submodule update --init`
 
 ## 目录结构
 
@@ -43,7 +54,7 @@ linux-kernel-overlay/
 ```bash
 # 只重编内核镜像（跳过重置/清理，增量秒级~分钟级）
 linux-kernel-overlay/scripts/apply_overlay.sh gengtao-bsp-0901 --force
-cd ../linux-imx6ull-kernel-code
+cd ..
 source ../linux-kernel-overlay/scripts/common.sh
 make ARCH=arm CROSS_COMPILE=$LINARO_CROSS zImage -j$(nproc)
 ../linux-kernel-overlay/scripts/update_board.sh gengtao-bsp-0901 tftp
@@ -58,7 +69,7 @@ make ARCH=arm CROSS_COMPILE=$LINARO_CROSS zImage -j$(nproc)
    （apply_overlay.sh 会校验，漏了直接报错提示）
 4. 内核配置开启对应驱动 CONFIG（改 `projects/gengtao-bsp-0901/arch/arm/configs/imx_v7_defconfig`）
 5. 构建 → 部署 → 板子验证（dmesg、/dev 节点、sysfs）
-6. 卡住了再看参考答案：`git -C ../linux-imx6ull-kernel-code show IMX6:arch/arm/boot/dts/xxx.dts`
+6. 卡住了再看参考答案：`git -C .. show IMX6:arch/arm/boot/dts/xxx.dts`
    （IMX6 分支有出厂全部实现，先自己想再看）
 
 ## 关键约束（务必遵守）

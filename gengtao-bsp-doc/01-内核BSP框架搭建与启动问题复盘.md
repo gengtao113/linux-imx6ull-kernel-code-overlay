@@ -12,7 +12,7 @@
 | 项 | 值 |
 |---|---|
 | 内核树 | `~/linux-imx6ull-code/linux-imx6ull-kernel-code`（分支 master-gengtao-0901，NXP 纯净基线） |
-| 定制框架 | `~/linux-imx6ull-code/linux-kernel-overlay`（common 公共层 + projects/gengtao-bsp-0901 板级层） |
+| 定制框架 | `linux-imx6ull-kernel-code/linux-kernel-overlay`（git 子模块，仓库 gengtao113/linux-imx6ull-kernel-code-overlay） |
 | 交叉编译器 | Linaro GCC 4.9.4（`/usr/local/arm/...`，无需 Yocto SDK） |
 | 宿主机 gcc | Ubuntu 13.3.0（引发问题 1 的关键） |
 | 板子启动方式 | U-Boot TFTP 拉取 zImage + dtb，NFS 挂载 rootfs（192.168.3.51 板 / 192.168.3.52 主机） |
