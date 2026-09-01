@@ -31,13 +31,17 @@ fi
 base_sha=$(awk '/^# base\(/ {print $3}' "$OVERLAY_DIR/MANIFEST")
 cur_sha=$(git rev-parse "$BASE_BRANCH")
 if [ "$base_sha" != "$cur_sha" ]; then
-    warn "$BASE_BRANCH 已从提取基线 $base_sha 前进到 $cur_sha，检测整文件覆盖冲突:"
-    awk '$1=="M" {print $2}' "$OVERLAY_DIR/MANIFEST" | while read -r p; do
+    # 基线前进时逐文件检测：仅在确有整文件覆盖冲突时才告警
+    CONFLICTS=$(awk '$1=="M" {print $2}' "$OVERLAY_DIR/MANIFEST" | while read -r p; do
         [ -f "$OVERLAY_DIR/.baseline/$p" ] || continue
         if ! git show "$BASE_BRANCH:$p" 2>/dev/null | cmp -s - "$OVERLAY_DIR/.baseline/$p"; then
-            warn "  $p: 上游已修改，overlay 整文件覆盖将丢失上游改动（需人工合并）"
+            echo "  $p: 上游已修改，overlay 整文件覆盖将丢失上游改动（需人工合并）"
         fi
-    done
+    done)
+    if [ -n "$CONFLICTS" ]; then
+        warn "$BASE_BRANCH 已从提取基线 $base_sha 前进到 $cur_sha，以下整文件覆盖将丢失上游改动:"
+        warn "$CONFLICTS"
+    fi
 fi
 
 # 3. 拷贝覆盖：先 common 后 project
