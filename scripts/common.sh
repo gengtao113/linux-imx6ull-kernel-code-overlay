@@ -9,7 +9,7 @@ _SELF_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 OVERLAY_DIR=${OVERLAY_DIR:-$(dirname "$_SELF_DIR")}
 KERNEL_DIR=${KERNEL_DIR:-$(dirname "$OVERLAY_DIR")}
 LINUX_ROOT=${LINUX_ROOT:-$(dirname "$KERNEL_DIR")}
-OUTPUT_DIR=${OUTPUT_DIR:-$LINUX_ROOT/output}
+OUTPUT_DIR=${OUTPUT_DIR:-$OVERLAY_DIR/linux-imx6ull-kernel-build-output}
 OVERLAY_REL=${OVERLAY_DIR#"$KERNEL_DIR"/}   # 内核树内的相对路径（子模块 gitlink 名）
 TOOLCHAIN=${TOOLCHAIN:-/usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf}
 # 注意：不用环境变量 CROSS_COMPILE 做默认值——用户 shell 环境可能已导出

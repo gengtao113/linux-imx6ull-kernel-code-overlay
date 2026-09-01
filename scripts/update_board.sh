@@ -1,7 +1,7 @@
 #!/bin/bash
 #=========================================================
 # 正点原子 I.MX6ULL 开发板 Linux 内核更新脚本
-# 把 output/<project>/ 里的编译产物更新到 TFTP / NFS 服务目录，板子复位即可验证
+# 把 linux-imx6ull-kernel-build-output/ 里的编译产物更新到 TFTP / NFS 服务目录，板子复位即可验证
 # 用法: ./update_board.sh <project> [tftp|nfs|all]  默认 tftp
 #   tftp  更新 zImage + dtb 到 TFTP 目录（最快验证）
 #   nfs   更新内核模块到 NFS 根文件系统
@@ -22,7 +22,7 @@ ROOTFS_DIR=/home/gengtao/linux-imx6ull/nfs/rootfs              # NFS 根文件�
 DTB=imx6ull-14x14-emmc-7-1024x600-c                           # 板载屏幕对应设备树（学习目标名）
 #----------------------------------------------------------------------
 
-OUT="$OUTPUT_DIR/$PROJECT"
+OUT="$OUTPUT_DIR"
 
 usage()
 {

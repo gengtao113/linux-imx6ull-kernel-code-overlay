@@ -1,5 +1,5 @@
 #!/bin/bash
-# 一键构建：重置基线 -> apply overlay -> 编译 -> 打包到树外 output/
+# 一键构建：重置基线 -> apply overlay -> 编译 -> 打包到 linux-imx6ull-kernel-build-output/
 # 用法: build_kernel.sh <project> [--no-reset] [--targets "t1 t2"] [--no-modules] [--no-package] [--jobs N]
 set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
@@ -20,7 +20,7 @@ while [ $# -gt 0 ]; do
     shift
 done
 
-OUT="$OUTPUT_DIR/$PROJECT"
+OUT="$OUTPUT_DIR"
 
 # ① 重置内核树到干净基线（应用过 overlay 的树必有改动，故强制）
 if [ "$NO_RESET" -eq 0 ]; then
@@ -59,7 +59,7 @@ else
     [ "$NO_MODULES" -eq 1 ] || make modules -j"$JOBS"
 fi
 
-# ④ 打包到树外 output/<project>/
+# ④ 打包到 linux-imx6ull-kernel-build-output/
 if [ "$NO_PACKAGE" -eq 0 ] && [ -z "$TARGETS" ]; then
     rm -rf "$OUT"
     mkdir -p "$OUT/tmp"

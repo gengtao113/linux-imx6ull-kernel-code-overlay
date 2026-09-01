@@ -25,7 +25,7 @@ linux-kernel-overlay/
 ├── .baseline/             # 修改文件的基线侧快照（未来内核升级冲突检测用）
 └── scripts/
     ├── common.sh                 # 公共库（路径/工具链/分层规则/safe_reset）
-    ├── build_kernel.sh           # 一键：重置基线 + apply + 编译 + 打包到 ../output/
+    ├── build_kernel.sh           # 一键：重置基线 + apply + 编译 + 打包到 linux-imx6ull-kernel-build-output/
     ├── apply_overlay.sh          # overlay → 内核树（先 common 后 project）
     ├── restore_baseline.sh       # 内核树恢复干净基线
     ├── capture_changes.sh        # 把内核树里的手工修改回收到 overlay
@@ -39,7 +39,7 @@ linux-kernel-overlay/
 ① 写代码：只改 overlay 里的文件，绝不直接改内核树
    vim linux-kernel-overlay/projects/gengtao-bsp-0901/arch/arm/boot/dts/xxx.dts
 
-② 一键构建（重置内核树 → 应用 overlay → 编译 → 产物到 ../output/gengtao-bsp-0901/）
+② 一键构建（重置内核树 → 应用 overlay → 编译 → 产物到 linux-imx6ull-kernel-build-output/）
    linux-kernel-overlay/scripts/build_kernel.sh gengtao-bsp-0901
 
 ③ 部署到板子
