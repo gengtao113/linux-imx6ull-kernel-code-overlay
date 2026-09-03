@@ -121,7 +121,7 @@ ethphy1: ethernet-phy@1 { reg = <1>; };  /* ENET2 */
 | CAN | TJA1050 | CAN1_TX/RX |
 | 音频 | **WM8960** | I2S + I2C |
 | 六轴 | **ICM-20608** | ECSPI3 + 中断 |
-| 光感/接近 | **AP3216C（U9）** | **I2C1**，地址 **0x1E**；`AP_INT`→**GPIO1_IO01**（落地 **11**，复盘 **12**） |
+| 光感/接近 | **AP3216C（U9）** | **I2C1**，地址 **0x1E**；`AP_INT`→**GPIO1_IO01**（落地 **11**，复盘 **12**，匹配 **13**） |
 | 摄像头 | 18pin CSI 座 | CSI 8bit + I2C2 |
 | LED / KEY / BEEP | GPIO | `LED0` / `KEY0` / `BEEP`（KEY0 可能与 GPIO1_IO01/AP_INT 跳线共用） |
 | USB | Host/HUB 等 | USB OTG / HUB |
@@ -158,7 +158,7 @@ ethphy1: ethernet-phy@1 { reg = <1>; };  /* ENET2 */
 | eMMC 在核心板 USDHC2 | emmc dts 已有 usdhc2 8bit 片段，可继续核对 |
 
 **建议学习顺序（对照原理图）：**  
-网口（FEC+PHY 复位）→ 能 NFS 登录 → LCD 时序/背光 → **AP3216C（I2C1，文档 11/12）** → TF/按键 LED → 音频/其它传感器。
+网口（FEC+PHY 复位）→ 能 NFS 登录 → LCD 时序/背光 → **AP3216C（I2C1，文档 11/12/13）** → TF/按键 LED → 音频/其它传感器。
 
 ---
 
