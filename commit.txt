@@ -1,13 +1,42 @@
-# 打通 FEC/SR8201F 网口，NFS 根文件系统可登录
+# 变更说明（仓库：linux-kernel-overlay）
 
-## 变更
+## 提交说明
 
-1. 板级 dts：补 PHY 复位脚（GPIO5_IO07/08），关掉占用复位脚的 spi4，TX_CLK pad 对齐 ALPHA
-2. fec 驱动：复位后再等 150ms，probe 时配置 ENET TX_CLK pad（对照 IMX6 / SR8201F）
-3. MANIFEST / .baseline 登记 fec_main.c
-4. 补充硬件原理图归纳、网卡落地顺序与问题复盘文档（04/05/06）
+打通 ALPHA 底板 AP3216C 光感/接近：替换 EVK 冲突节点，从 `origin/IMX6` 引入出厂驱动并编进内核；补充落地文档 11、复盘 12，并更新原理图 04。
 
-## 验证
+## 设备树
 
-- 定制 dtb TFTP 加载成功；内核挂上 Generic PHY，eth0 Link Up 100M Full
-- IP-Config / NFS 挂载成功，可 login；ping 主机 192.168.3.52 通
+`projects/gengtao-bsp-0901/arch/arm/boot/dts/imx6ull-14x14-evk-gengtao0901.dts`（`&i2c1`）：
+
+1. 删除 EVK 遗留 **`fxls8471@1e`**（与 AP3216C 同址 0x1E）
+2. **`mag3110@0e`** 置 `status = "disabled"`（ALPHA 无此芯片）
+3. 新增 **`ap3216c@1e`**：`compatible = "LiteOn,ap3216c", "ap3216c"`；`reg = <0x1e>`
+
+## 驱动与配置
+
+从 `origin/IMX6` 引入；`MANIFEST` 登记对应 `A`/`M`：
+
+| 路径 | 状态 | 说明 |
+|------|------|------|
+| `common/drivers/char/ap3216c.c` | `A` | 出厂字符设备驱动 |
+| `common/include/linux/ap3216c.h` | `A` | ioctl 头文件 |
+| `common/drivers/char/Kconfig` | `M` | `config LITEON_AP3216C` |
+| `common/drivers/char/Makefile` | `M` | `obj-$(CONFIG_LITEON_AP3216C) += ap3216c.o` |
+| `projects/.../arch/arm/configs/imx_v7_defconfig` | `M` | `CONFIG_LITEON_AP3216C=y` |
+| `.baseline/drivers/char/{Kconfig,Makefile}` | 新增 | 覆盖冲突检测基线快照 |
+| `.baseline/arch/arm/configs/imx_v7_defconfig` | 新增 | 同上 |
+
+## 文档
+
+| 文件 | 变更 |
+|------|------|
+| `gengtao-bsp-doc/11-AP3216C光感打通-分析思路与落地顺序.md` | **新增**：L0～L5 落地、总线号判定、驱动来源、各层实测与 L4 读数脚本 |
+| `gengtao-bsp-doc/12-AP3216C光感打通-问题复盘.md` | **新增**：时间线、同址冲突/只更 dtb/空 dmesg/`UU` 等根因与易误判 |
+| `gengtao-bsp-doc/04-硬件原理图归纳-核心板与ALPHA底板.md` | **修改**：补 AP3216C（I2C1@0x1E、`AP_INT`→GPIO1_IO01），指向 11/12 |
+
+## 验证（板上）
+
+- `/dev/ap3216c` 存在；`i2cdetect -y 0` 上 **0x1e → `UU`**
+- sysfs：`/sys/devices/virtual/misc/ap3216c/{als,ps,ir}` 可读
+- 出厂驱动成功路径无 dmesg；以节点 + `UU` + sysfs 为准
+- L5（`AP_INT` 中断）未做，留作二期

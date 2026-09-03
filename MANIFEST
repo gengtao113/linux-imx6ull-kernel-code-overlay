@@ -14,3 +14,8 @@ M	include/dt-bindings/clock/imx6ul-clock.h	common
 M	include/dt-bindings/gpio/gpio.h	common
 M	include/dt-bindings/interrupt-controller/arm-gic.h	common
 M	drivers/net/ethernet/freescale/fec_main.c	projects/gengtao-bsp-0901
+A	drivers/char/ap3216c.c	common
+A	include/linux/ap3216c.h	common
+M	drivers/char/Kconfig	common
+M	drivers/char/Makefile	common
+M	arch/arm/configs/imx_v7_defconfig	projects/gengtao-bsp-0901
