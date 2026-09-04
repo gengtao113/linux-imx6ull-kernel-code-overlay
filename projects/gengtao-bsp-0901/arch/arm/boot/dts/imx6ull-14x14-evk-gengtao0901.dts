@@ -227,7 +227,31 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_flexcan2>;
 	xceiver-supply = <&reg_can_3v3>;
+	/* 释放 UART2_RTS/CTS → ECSPI3 MISO/MOSI，给 ICM-20608 用（文档 16 L0） */
+	status = "disabled";
+};
+
+/* ALPHA 底板 U6 ICM-20608：ECSPI3 + GPIO1_IO20 片选（文档 16 L1） */
+&ecspi3 {
+	fsl,spi-num-chipselects = <1>;
+	cs-gpios = <&gpio1 20 GPIO_ACTIVE_LOW>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_ecspi3>;
 	status = "okay";
+
+	icm20608@0 {
+		compatible = "alientek,icm20608";
+		reg = <0>;
+		spi-cpol;
+		spi-cpha;
+		spi-max-frequency = <8000000>;
+
+		/* L5：中断 6D_INT→GPIO1_IO10，届时取消注释并绑定驱动 IRQ */
+		/* pinctrl-names = "default"; */
+		/* pinctrl-0 = <&pinctrl_icm20608>; */
+		/* interrupt-parent = <&gpio1>; */
+		/* interrupts = <10 IRQ_TYPE_LEVEL_LOW>; */
+	};
 };
 
 &gpc {
@@ -362,6 +386,23 @@
 			fsl,pins = <
 				MX6UL_PAD_UART2_RTS_B__FLEXCAN2_RX	0x1b020
 				MX6UL_PAD_UART2_CTS_B__FLEXCAN2_TX	0x1b020
+			>;
+		};
+
+		/* ALPHA 底板 ICM-20608：ECSPI3（文档 16 L1；与 flexcan2/uart2 互斥） */
+		pinctrl_ecspi3: ecspi3grp {
+			fsl,pins = <
+				MX6UL_PAD_UART2_RTS_B__ECSPI3_MISO	0x100b1 /* MISO */
+				MX6UL_PAD_UART2_CTS_B__ECSPI3_MOSI	0x100b1 /* MOSI */
+				MX6UL_PAD_UART2_RX_DATA__ECSPI3_SCLK	0x100b1 /* SCLK */
+				MX6UL_PAD_UART2_TX_DATA__GPIO1_IO20	0x100b0 /* CS 软件片选 */
+			>;
+		};
+
+		/* ICM-20608 中断脚 6D_INT→GPIO1_IO10（L5 再用，L1 仅预留） */
+		pinctrl_icm20608: icm20608grp {
+			fsl,pins = <
+				MX6UL_PAD_JTAG_MOD__GPIO1_IO10		0xb0b0
 			>;
 		};
 
@@ -699,7 +740,8 @@
 	/* for DTE mode, add below change */
 	/* fsl,dte-mode; */
 	/* pinctrl-0 = <&pinctrl_uart2dte>; */
-	status = "okay";
+	/* 释放 UART2_TX/RX → ECSPI3 CS/SCLK，给 ICM-20608 用；调试串口继续用 UART1（文档 16 L0） */
+	status = "disabled";
 };
 
 &usbotg1 {

@@ -114,6 +114,18 @@ config LITEON_AP3216C
 
 	  If unsure, it is safe to say Y.
 
+config ICM20608
+	tristate "ALIENTEK ICM-20608 6-axis sensor (SPI)"
+	depends on SPI
+	help
+	  SPI driver for InvenSense ICM-20608 on ALIENTEK i.MX6ULL ALPHA.
+	  Provides /dev/icm20608 and sysfs accel/gyro/temp/whoami.
+
+	  To compile this driver as a module, choose M here: the module
+	  will be called icm20608.
+
+	  If unsure, it is safe to say Y.
+
 config PRINTER
 	tristate "Parallel printer support"
 	depends on PARPORT

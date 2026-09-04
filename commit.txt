@@ -2,41 +2,45 @@
 
 ## 提交说明
 
-打通 ALPHA 底板 AP3216C 光感/接近：替换 EVK 冲突节点，从 `origin/IMX6` 引入出厂驱动并编进内核；补充落地文档 11、复盘 12，并更新原理图 04。
+打通 ALPHA 底板 ICM-20608 六轴：禁用与 ECSPI3 冲突的 uart2/flexcan2，启用 `&ecspi3` + `icm20608@0`；引入自研 SPI+misc 驱动（`CONFIG_ICM20608=y`）；新增落地文档 16，并更新原理图 04 学习顺序。
+
+---
 
 ## 设备树
 
-`projects/gengtao-bsp-0901/arch/arm/boot/dts/imx6ull-14x14-evk-gengtao0901.dts`（`&i2c1`）：
+`projects/gengtao-bsp-0901/arch/arm/boot/dts/imx6ull-14x14-evk-gengtao0901.dts`：
 
-1. 删除 EVK 遗留 **`fxls8471@1e`**（与 AP3216C 同址 0x1E）
-2. **`mag3110@0e`** 置 `status = "disabled"`（ALPHA 无此芯片）
-3. 新增 **`ap3216c@1e`**：`compatible = "LiteOn,ap3216c", "ap3216c"`；`reg = <0x1e>`
+1. **`&flexcan2` / `&uart2`** → `disabled`（释放 UART2 脚）
+2. 新增 **`pinctrl_ecspi3`**、预留 **`pinctrl_icm20608`**
+3. 启用 **`&ecspi3`** + **`icm20608@0`**（`alientek,icm20608`，Mode3，8MHz，`cs-gpios`）
+
+---
 
 ## 驱动与配置
 
-从 `origin/IMX6` 引入；`MANIFEST` 登记对应 `A`/`M`：
-
 | 路径 | 状态 | 说明 |
 |------|------|------|
-| `common/drivers/char/ap3216c.c` | `A` | 出厂字符设备驱动 |
-| `common/include/linux/ap3216c.h` | `A` | ioctl 头文件 |
-| `common/drivers/char/Kconfig` | `M` | `config LITEON_AP3216C` |
-| `common/drivers/char/Makefile` | `M` | `obj-$(CONFIG_LITEON_AP3216C) += ap3216c.o` |
-| `projects/.../arch/arm/configs/imx_v7_defconfig` | `M` | `CONFIG_LITEON_AP3216C=y` |
-| `.baseline/drivers/char/{Kconfig,Makefile}` | 新增 | 覆盖冲突检测基线快照 |
-| `.baseline/arch/arm/configs/imx_v7_defconfig` | 新增 | 同上 |
+| `common/drivers/char/icm20608.c` | `A` | SPI + misc + sysfs |
+| `common/include/linux/icm20608.h` | `A` | ioctl 头文件 |
+| `common/drivers/char/Kconfig` | `M` | `config ICM20608` |
+| `common/drivers/char/Makefile` | `M` | `obj-$(CONFIG_ICM20608) += icm20608.o` |
+| `projects/.../imx_v7_defconfig` | `M` | `CONFIG_ICM20608=y` |
+| `MANIFEST` | `M` | 登记上述项 |
+
+---
 
 ## 文档
 
 | 文件 | 变更 |
 |------|------|
-| `gengtao-bsp-doc/11-AP3216C光感打通-分析思路与落地顺序.md` | **新增**：L0～L5 落地、总线号判定、驱动来源、各层实测与 L4 读数脚本 |
-| `gengtao-bsp-doc/12-AP3216C光感打通-问题复盘.md` | **新增**：时间线、同址冲突/只更 dtb/空 dmesg/`UU` 等根因与易误判 |
-| `gengtao-bsp-doc/04-硬件原理图归纳-核心板与ALPHA底板.md` | **修改**：补 AP3216C（I2C1@0x1E、`AP_INT`→GPIO1_IO01），指向 11/12 |
+| `gengtao-bsp-doc/16-ICM-20608的G-sensor打通-分析思路与落地顺序.md` | 新增：L0～L5、实测日志、sysfs 物理验收 |
+| `gengtao-bsp-doc/04-硬件原理图归纳-核心板与ALPHA底板.md` | 六轴指向 **16**；学习顺序补充 |
+
+---
 
 ## 验证（板上）
 
-- `/dev/ap3216c` 存在；`i2cdetect -y 0` 上 **0x1e → `UU`**
-- sysfs：`/sys/devices/virtual/misc/ap3216c/{als,ps,ir}` 可读
-- 出厂驱动成功路径无 dmesg；以节点 + `UU` + sysfs 为准
-- L5（`AP_INT` 中断）未做，留作二期
+- `dmesg`：`WHO_AM_I=0xaf OK`；`icm20608 probe OK`
+- `/dev/icm20608`；`spi2.0/driver` → `icm20608`
+- `cat .../whoami` → `0xaf`；平放 `accel_z`≈16600
+- L4 倾斜/转动、L5 中断未强制完成，可继续手工验

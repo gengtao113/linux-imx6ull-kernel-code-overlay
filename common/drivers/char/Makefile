@@ -18,6 +18,7 @@ obj-$(CONFIG_SGI_MBCS)		+= mbcs.o
 obj-$(CONFIG_BFIN_OTP)		+= bfin-otp.o
 obj-$(CONFIG_FSL_OTP)		+= fsl_otp.o
 obj-$(CONFIG_LITEON_AP3216C)	+= ap3216c.o
+obj-$(CONFIG_ICM20608)		+= icm20608.o
 
 obj-$(CONFIG_PRINTER)		+= lp.o
 
