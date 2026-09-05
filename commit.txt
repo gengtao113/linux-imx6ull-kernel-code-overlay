@@ -1,46 +1,64 @@
 # 变更说明（仓库：linux-kernel-overlay）
 
+## 一句话
+
+7 寸屏从「只能显示」升级为「可显示 + 可触摸」：屏上的电容触摸已打通，Linux 能拿到触点坐标，LVGL 能据此响应点击。
+
 ## 提交说明
 
-打通 ALPHA 底板 ICM-20608 六轴：禁用与 ECSPI3 冲突的 uart2/flexcan2，启用 `&ecspi3` + `icm20608@0`；引入自研 SPI+misc 驱动（`CONFIG_ICM20608=y`）；新增落地文档 16，并更新原理图 04 学习顺序。
+ALPHA 底板 7 寸 RGBLCD 模组上，除显示外还带一块**电容触摸 IC（Goodix gt9xx）**，走 I2C2、地址 `0x5d`（板上实测确认）。本次把它从「原理图上有」变成「软件能用」：
 
----
+1. **腾出被占用的引脚** —— 关掉 SoC 自带的电阻触摸（`&tsc`）；SD 卡供电、LCD 复位之前占着触摸要用的中断 / 复位两根脚，一并让出来。
+2. **设备树挂上触摸** —— 在 I2C2 下声明 `goodix_ts@5d`，指明中断（CT_INT）、复位（CT_RST）引脚。
+3. **引入现成驱动** —— 内核自带 gt9xx 触摸驱动，`CONFIG_TOUCHSCREEN_GT9XX=y` 编入，不用自己写。
+4. **对上输入子系统** —— 驱动把坐标经 input 子系统上报到 `/dev/input/event1`，LVGL 用 evdev 读取。
 
-## 设备树
+## 交付结果（业务）
 
-`projects/gengtao-bsp-0901/arch/arm/boot/dts/imx6ull-14x14-evk-gengtao0901.dts`：
+| 能力 | 状态 |
+|------|------|
+| 显示 | 不变（1024×600 LCD） |
+| 触摸输入 | 新增：`goodix-ts` → `/dev/input/event1`，摸屏有 EV_ABS 坐标 |
+| 上层点控 | LVGL `EVDEV_NAME=/dev/input/event1`（待板上最终确认） |
 
-1. **`&flexcan2` / `&uart2`** → `disabled`（释放 UART2 脚）
-2. 新增 **`pinctrl_ecspi3`**、预留 **`pinctrl_icm20608`**
-3. 启用 **`&ecspi3`** + **`icm20608@0`**（`alientek,icm20608`，Mode3，8MHz，`cs-gpios`）
+## 技术实现（开发者看）
 
----
+### 设备树
 
-## 驱动与配置
+`projects/gengtao-bsp-0901/arch/arm/boot/dts/imx6ull-14x14-evk-emmc-gengtao0901-1024-600.dts`：
+
+| 改动 | 业务含义 |
+|------|---------|
+| `&tsc` → `disabled` | 不用 SoC 电阻触摸，改用屏上电容触摸 |
+| `&reg_sd1_vmmc` 删 `gpio` | 让出 GPIO1_IO09 给触摸中断（否则 gt9xx `-EBUSY`） |
+| `pinctrl_hog_1` 去掉 GPIO1_IO09 | 同上，释放 CT_INT |
+| 新增 `ts_int_pin` / `ts_reset_pin` | 声明触摸的中断 / 复位引脚 |
+| `&i2c2` 挂 `goodix_ts@5d` | 触摸 IC 挂 I2C2，地址 `0x5d` |
+| `&lcdif` 不挂 reset | LCD 复位与触摸复位同脚，避免 probe 冲突 |
+
+### 驱动与配置
 
 | 路径 | 状态 | 说明 |
 |------|------|------|
-| `common/drivers/char/icm20608.c` | `A` | SPI + misc + sysfs |
-| `common/include/linux/icm20608.h` | `A` | ioctl 头文件 |
-| `common/drivers/char/Kconfig` | `M` | `config ICM20608` |
-| `common/drivers/char/Makefile` | `M` | `obj-$(CONFIG_ICM20608) += icm20608.o` |
-| `projects/.../imx_v7_defconfig` | `M` | `CONFIG_ICM20608=y` |
+| `common/drivers/input/touchscreen/gt9xx.c` / `.h` | `A` | Goodix GT9XX 触摸驱动 |
+| `common/drivers/input/touchscreen/Kconfig` / `Makefile` | `M` | 注册 `CONFIG_TOUCHSCREEN_GT9XX` |
+| `projects/.../imx_v7_defconfig` | `M` | `CONFIG_TOUCHSCREEN_GT9XX=y` |
 | `MANIFEST` | `M` | 登记上述项 |
-
----
 
 ## 文档
 
-| 文件 | 变更 |
-|------|------|
-| `gengtao-bsp-doc/16-ICM-20608的G-sensor打通-分析思路与落地顺序.md` | 新增：L0～L5、实测日志、sysfs 物理验收 |
-| `gengtao-bsp-doc/04-硬件原理图归纳-核心板与ALPHA底板.md` | 六轴指向 **16**；学习顺序补充 |
+| 文件 | 变更 | 内容 |
+|------|------|------|
+| `gengtao-bsp-doc/04-...` | 改 | 触摸指向 21；学习顺序补充 |
+| `gengtao-bsp-doc/07-...` | 改 | 触摸后开指向 21；补 LCDIF/mxsfb 术语 |
+| `gengtao-bsp-doc/09-...` | 改 | 补 LCDIF/mxsfb 术语 |
+| `gengtao-bsp-doc/21-...` | 增 | 落地 L0～L5 |
+| `gengtao-bsp-doc/22-...` | 增 | 问题复盘 |
+| `gengtao-bsp-doc/23-...` | 增 | DT 匹配 / I2C→input 流程 |
 
----
+## 业务验收（板上）
 
-## 验证（板上）
-
-- `dmesg`：`WHO_AM_I=0xaf OK`；`icm20608 probe OK`
-- `/dev/icm20608`；`spi2.0/driver` → `icm20608`
-- `cat .../whoami` → `0xaf`；平放 `accel_z`≈16600
-- L4 倾斜/转动、L5 中断未强制完成，可继续手工验
+- `i2cdetect -y 1` 扫到 `0x5d` → 芯片在位、I2C 通路正常
+- `dmesg` 出现 `goodix-ts` → 驱动已接管
+- `hexdump -C /dev/input/event1` 摸屏有坐标 → 触摸数据已上报
+- LVGL `EVDEV_NAME=/dev/input/event1` → 上层可点（L5 待最终确认）

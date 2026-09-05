@@ -103,7 +103,7 @@ ethphy1: ethernet-phy@1 { reg = <1>; };  /* ENET2 */
 
 - 接口：**24bit RGB LCD**（40pin FPC）
 - 控制：`LCD_DE / HSYNC / VSYNC / PCLK`，背光 `BLT_PWM`
-- 触摸：走 **I2C2**（`CT_INT` / `CT_RST`）
+- 触摸：走 **I2C2**（`CT_INT` / `CT_RST`）→ 落地见 **21**
 - 部分 `LCD_DATA` 经 **SGM3157** 模拟开关与启动相关信号复用——写屏参时注意脚位是否被拨码/开关切走
 
 ### 3. 存储与启动相关（底板侧）
@@ -158,7 +158,7 @@ ethphy1: ethernet-phy@1 { reg = <1>; };  /* ENET2 */
 | eMMC 在核心板 USDHC2 | emmc dts 已有 usdhc2 8bit 片段，可继续核对 |
 
 **建议学习顺序（对照原理图）：**  
-网口（FEC+PHY 复位）→ 能 NFS 登录 → LCD 时序/背光 → **AP3216C（I2C1，文档 11/12/13，框架 14/15）** → **ICM-20608 六轴（ECSPI3，文档 16/17/18，框架 19/20）** → TF/按键 LED → 音频/其它传感器。
+网口（FEC+PHY 复位）→ 能 NFS 登录 → LCD 时序/背光 → **AP3216C（I2C1，文档 11/12/13，框架 14/15）** → **ICM-20608 六轴（ECSPI3，文档 16/17/18，框架 19/20）** → **电容触摸（I2C2，文档 21）** → TF/按键 LED → 音频/其它传感器。
 
 ---
 

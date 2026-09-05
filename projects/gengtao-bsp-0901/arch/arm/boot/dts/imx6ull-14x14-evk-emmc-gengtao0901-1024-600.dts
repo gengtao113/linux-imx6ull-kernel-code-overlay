@@ -19,6 +19,7 @@
  */
 
 #include "imx6ull-14x14-evk-gengtao0901.dts"
+#include <dt-bindings/gpio/gpio.h>
 
 &usdhc2 {
 	pinctrl-names = "default", "state_100mhz", "state_200mhz";
@@ -39,6 +40,16 @@
  * 本文件只放「这块屏」的 display + timings，避免拆成 &display0/&timing0 两处。
  */
 &lcdif {
+	/*
+	 * 出厂 alientek：lcdif 只挂 dat+ctrl，不挂 pinctrl_lcdif_reset。
+	 * GPIO5_IO09（SNVS_TAMPER9）留给电容触摸 ts_reset_pin；
+	 * 若 lcdif 与 goodix 同时挂该脚，probe 报：
+	 *   goodix-ts: Error applying setting, reverse things back
+	 */
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_lcdif_dat
+		     &pinctrl_lcdif_ctrl>;
+
 	display = <&display0>;
 
 	display0: display {
@@ -64,5 +75,76 @@
 				pixelclk-active = <0>;
 			};
 		};
+	};
+};
+
+/* ===== 板级定制区：电容触摸 L1（文档 21）——关电阻 TSC + 释放 CT_INT 脚 ===== */
+
+/*
+ * L1：
+ * 1) &tsc disabled —— RGBLCD 用 I2C2 电容触摸，不用 SoC 电阻 TSC
+ * 2) hog 去掉 GPIO1_IO09（原 SD1 RESET）——留给 CT_INT（L2 ts_int_pin）
+ * 3) reg_sd1_vmmc 去掉 gpio=<&gpio1 9> —— EVK 用该脚作 SD 供电使能，
+ *    与 CT_INT 冲突；出厂 alientek 已注释掉（NFS 启动不依赖此脚）
+ *    否则 gt9xx：Failed to request GPIO… ERRNO:-16 (-EBUSY)
+ */
+&tsc {
+	status = "disabled";
+};
+
+&reg_sd1_vmmc {
+	/delete-property/ gpio;
+};
+
+&iomuxc {
+	imx6ul-evk {
+		pinctrl_hog_1: hoggrp-1 {
+			fsl,pins = <
+				MX6UL_PAD_UART1_RTS_B__GPIO1_IO19	0x17059 /* SD1 CD */
+				MX6UL_PAD_GPIO1_IO05__USDHC1_VSELECT	0x17059 /* SD1 VSELECT */
+				/* GPIO1_IO09 不再 hog：留给电容触摸 CT_INT（文档 21 L1/L2） */
+			>;
+		};
+
+		/* L2：CT_INT → GPIO1_IO09（对照 origin/IMX6 ts_int_pin） */
+		ts_int_pin: ts_int_pin_mux {
+			fsl,pins = <
+				MX6UL_PAD_GPIO1_IO09__GPIO1_IO09	0x49
+			>;
+		};
+	};
+};
+
+/*
+ * L2：CT_RST → GPIO5_IO09（SNVS_TAMPER9）。
+ * 与基线 pinctrl_lcdif_reset 同脚（出厂亦如此：LCD reset / 触摸 reset 共用）。
+ */
+&iomuxc_snvs {
+	imx6ul-evk {
+		ts_reset_pin: ts_reset_pin_mux {
+			fsl,pins = <
+				MX6ULL_PAD_SNVS_TAMPER9__GPIO5_IO09	0x49
+			>;
+		};
+	};
+};
+
+/* ===== 板级定制区：电容触摸 L2（文档 21）——I2C2 挂 goodix@0x5d ===== */
+
+/*
+ * 本板 L0：i2cdetect -y 1 仅见 0x5d，未见 0x38 → 只挂 gt9xx，不挂 edt-ft5x06。
+ * 驱动绑定留 L3（CONFIG_TOUCHSCREEN_GT9XX + gt9xx.c）；本步只保证节点进 dtb。
+ */
+&i2c2 {
+	goodix_ts@5d {
+		compatible = "goodix,gt9xx";
+		reg = <0x5d>;
+		status = "okay";
+		pinctrl-names = "default";
+		pinctrl-0 = <&ts_int_pin &ts_reset_pin>;
+		interrupt-parent = <&gpio1>;
+		interrupts = <9 0>;
+		goodix,rst-gpio = <&gpio5 9 GPIO_ACTIVE_LOW>;
+		goodix,irq-gpio = <&gpio1 9 GPIO_ACTIVE_LOW>;
 	};
 };

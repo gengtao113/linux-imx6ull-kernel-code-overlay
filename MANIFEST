@@ -21,3 +21,7 @@ A	include/linux/icm20608.h	common
 M	drivers/char/Kconfig	common
 M	drivers/char/Makefile	common
 M	arch/arm/configs/imx_v7_defconfig	projects/gengtao-bsp-0901
+A	drivers/input/touchscreen/gt9xx.c	common
+A	drivers/input/touchscreen/gt9xx.h	common
+M	drivers/input/touchscreen/Kconfig	common
+M	drivers/input/touchscreen/Makefile	common
