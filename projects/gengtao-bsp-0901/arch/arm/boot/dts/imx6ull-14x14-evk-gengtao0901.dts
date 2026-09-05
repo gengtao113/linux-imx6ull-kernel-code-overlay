@@ -51,6 +51,18 @@
 		status = "okay";
 	};
 
+	leds {
+		compatible = "gpio-leds";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_gpio_leds>;
+
+		led0 {
+			label = "sys-led";
+			gpios = <&gpio1 3 GPIO_ACTIVE_LOW>;
+			default-state = "on";
+		};
+	};
+
 	pxp_v4l2 {
 		compatible = "fsl,imx6ul-pxp-v4l2", "fsl,imx6sx-pxp-v4l2", "fsl,imx6sl-pxp-v4l2";
 		status = "okay";
@@ -417,6 +429,12 @@
 			fsl,pins = <
 				MX6UL_PAD_UART5_TX_DATA__I2C2_SCL 0x4001b8b0
 				MX6UL_PAD_UART5_RX_DATA__I2C2_SDA 0x4001b8b0
+			>;
+		};
+
+		pinctrl_gpio_leds: gpio-leds {
+			fsl,pins = <
+				MX6UL_PAD_GPIO1_IO03__GPIO1_IO03	0x17059
 			>;
 		};
 
