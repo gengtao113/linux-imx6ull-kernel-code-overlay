@@ -63,6 +63,18 @@
 		};
 	};
 
+	gpio_keys {
+		compatible = "gpio-keys";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_gpio_keys>;
+
+		key0 {
+			label = "KEY0";
+			linux,code = <114>;	/* KEY_VOLUMEDOWN，可改成任意键值 */
+			gpios = <&gpio1 18 GPIO_ACTIVE_LOW>;
+		};
+	};
+
 	pxp_v4l2 {
 		compatible = "fsl,imx6ul-pxp-v4l2", "fsl,imx6sx-pxp-v4l2", "fsl,imx6sl-pxp-v4l2";
 		status = "okay";
@@ -435,6 +447,12 @@
 		pinctrl_gpio_leds: gpio-leds {
 			fsl,pins = <
 				MX6UL_PAD_GPIO1_IO03__GPIO1_IO03	0x17059
+			>;
+		};
+
+		pinctrl_gpio_keys: gpio-keys {
+			fsl,pins = <
+				MX6UL_PAD_UART1_CTS_B__GPIO1_IO18	0x80000000
 			>;
 		};
 
